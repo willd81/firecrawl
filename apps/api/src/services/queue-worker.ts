@@ -733,7 +733,7 @@ const workerFun = async (
     connection: redisConnection,
     lockDuration: 1 * 60 * 1000, // 1 minute
     // lockRenewTime: 15 * 1000, // 15 seconds
-    stalledInterval: 30 * 1000, // 30 seconds
+    stalledInterval: 180 * 1000, // 180 seconds (3 mins)
     maxStalledCount: 10, // 10 times
   });
 

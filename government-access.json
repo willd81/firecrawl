@@ -1,0 +1,9 @@
+{
+  "ignoreRobotsTxt": true,
+  "includes": [],
+  "excludes": [], 
+  "allowExternalContentLinks": true,
+  "allowSubdomains": true,
+  "allowBackwardCrawling": true,
+  "regexOnFullURL": false
+}
