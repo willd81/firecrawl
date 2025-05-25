@@ -174,6 +174,15 @@ export async function scrapeURLWithFireEngineChromeCDP(
   meta: Meta,
   timeToRun: number | undefined,
 ): Promise<EngineScrapeResult> {
+  // ✅ Use timeout from parameters or fallback to 3 minutes
+  const timeout = timeToRun ?? 180000; // fallback to 3 min if not set
+  
+  meta.logger.debug(`Using timeout for ChromeCDP: ${timeout}ms`, { 
+    timeToRun, 
+    timeout,
+    method: "scrapeURLWithFireEngineChromeCDP"
+  });
+
   const actions: Action[] = [
     // Transform waitFor option into an action (unsupported by chrome-cdp)
     ...(meta.options.waitFor !== 0
@@ -205,7 +214,8 @@ export async function scrapeURLWithFireEngineChromeCDP(
     0,
   );
 
-  const timeout = (timeToRun ?? 300000) + totalWait;
+  // ✅ Use the timeout properly with additional wait time
+  const finalTimeout = timeout + totalWait;
 
   const request: FireEngineScrapeRequestCommon &
     FireEngineScrapeRequestChromeCDP = {
@@ -222,7 +232,7 @@ export async function scrapeURLWithFireEngineChromeCDP(
     priority: meta.internalOptions.priority,
     geolocation: meta.options.geolocation ?? meta.options.location,
     mobile: meta.options.mobile,
-    timeout, // TODO: better timeout logic
+    timeout: finalTimeout, // ✅ Use calculated timeout
     disableSmartWaitCache: meta.internalOptions.disableSmartWaitCache,
     blockAds: meta.options.blockAds,
     mobileProxy: meta.featureFlags.has("stealthProxy"),
@@ -236,9 +246,9 @@ export async function scrapeURLWithFireEngineChromeCDP(
       request,
     }),
     request,
-    timeout,
+    finalTimeout, // ✅ Use calculated timeout
     meta.mock,
-    meta.internalOptions.abort ?? AbortSignal.timeout(timeout),
+    meta.internalOptions.abort ?? AbortSignal.timeout(finalTimeout),
   );
 
   if (
@@ -290,8 +300,17 @@ export async function scrapeURLWithFireEnginePlaywright(
   meta: Meta,
   timeToRun: number | undefined,
 ): Promise<EngineScrapeResult> {
+  // ✅ Use timeout from parameters or fallback to 3 minutes
+  const timeout = timeToRun ?? 180000; // fallback to 3 min if not set
+  
+  meta.logger.debug(`Using timeout for Playwright: ${timeout}ms`, { 
+    timeToRun, 
+    timeout,
+    method: "scrapeURLWithFireEnginePlaywright"
+  });
+
   const totalWait = meta.options.waitFor;
-  const timeout = (timeToRun ?? 300000) + totalWait;
+  const finalTimeout = timeout + totalWait;
 
   const request: FireEngineScrapeRequestCommon &
     FireEngineScrapeRequestPlaywright = {
@@ -308,7 +327,7 @@ export async function scrapeURLWithFireEnginePlaywright(
     blockAds: meta.options.blockAds,
     mobileProxy: meta.featureFlags.has("stealthProxy"),
 
-    timeout,
+    timeout: finalTimeout, // ✅ Use calculated timeout
   };
 
   let response = await performFireEngineScrape(
@@ -317,9 +336,9 @@ export async function scrapeURLWithFireEnginePlaywright(
       request,
     }),
     request,
-    timeout,
+    finalTimeout, // ✅ Use calculated timeout
     meta.mock,
-    meta.internalOptions.abort ?? AbortSignal.timeout(timeout),
+    meta.internalOptions.abort ?? AbortSignal.timeout(finalTimeout),
   );
 
   if (!response.url) {
@@ -348,7 +367,14 @@ export async function scrapeURLWithFireEngineTLSClient(
   meta: Meta,
   timeToRun: number | undefined,
 ): Promise<EngineScrapeResult> {
-  const timeout = timeToRun ?? 30000;
+  // ✅ Use timeout from parameters or fallback to 3 minutes
+  const timeout = timeToRun ?? 180000; // fallback to 3 min if not set
+  
+  meta.logger.debug(`Using timeout for TLSClient: ${timeout}ms`, { 
+    timeToRun, 
+    timeout,
+    method: "scrapeURLWithFireEngineTLSClient"
+  });
 
   const request: FireEngineScrapeRequestCommon &
     FireEngineScrapeRequestTLSClient = {
@@ -364,7 +390,7 @@ export async function scrapeURLWithFireEngineTLSClient(
     disableJsDom: meta.internalOptions.v0DisableJsDom,
     mobileProxy: meta.featureFlags.has("stealthProxy"),
 
-    timeout,
+    timeout, // ✅ Use timeout from parameters
   };
 
   let response = await performFireEngineScrape(
@@ -373,7 +399,7 @@ export async function scrapeURLWithFireEngineTLSClient(
       request,
     }),
     request,
-    timeout,
+    timeout, // ✅ Use timeout from parameters
     meta.mock,
     meta.internalOptions.abort ?? AbortSignal.timeout(timeout),
   );

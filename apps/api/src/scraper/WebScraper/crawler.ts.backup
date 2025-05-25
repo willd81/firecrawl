@@ -85,7 +85,7 @@ export class WebCrawler {
     this.allowBackwardCrawling = allowBackwardCrawling ?? false;
     this.allowExternalContentLinks = allowExternalContentLinks ?? false;
     this.allowSubdomains = allowSubdomains ?? false;
-    this.ignoreRobotsTxt = true; // Force ignore robots.txt for all crawls
+    this.ignoreRobotsTxt = ignoreRobotsTxt ?? false;
     this.regexOnFullURL = regexOnFullURL ?? false;
     this.logger = _logger.child({ crawlId: this.jobId, module: "WebCrawler" });
     this.maxDiscoveryDepth = maxDiscoveryDepth;
@@ -135,8 +135,33 @@ export class WebCrawler {
 
         const excincPath = this.regexOnFullURL ? link : path;
 
-        // 🔓 BYPASS: Allow all links regardless of include/exclude patterns
-        // Original filtering logic disabled for comprehensive public data access
+        // Check if the link should be excluded
+        if (this.excludes.length > 0 && this.excludes[0] !== "") {
+          if (
+            this.excludes.some((excludePattern) =>
+              new RegExp(excludePattern).test(excincPath),
+            )
+          ) {
+            if (process.env.FIRECRAWL_DEBUG_FILTER_LINKS) {
+              this.logger.debug(`${link} EXCLUDE FAIL`);
+            }
+            return false;
+          }
+        }
+
+        // Check if the link matches the include patterns, if any are specified
+        if (this.includes.length > 0 && this.includes[0] !== "") {
+          if (
+            !this.includes.some((includePattern) =>
+              new RegExp(includePattern).test(excincPath),
+            )
+          ) {
+            if (process.env.FIRECRAWL_DEBUG_FILTER_LINKS) {
+              this.logger.debug(`${link} INCLUDE FAIL`);
+            }
+            return false;
+          }
+        }
 
         // Normalize the initial URL and the link to account for www and non-www versions
         const normalizedInitialUrl = new URL(this.initialUrl);

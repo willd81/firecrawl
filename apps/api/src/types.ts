@@ -47,6 +47,7 @@ export interface WebScraperOptions {
   is_scrape?: boolean;
   isCrawlSourceScrape?: boolean;
   from_extract?: boolean;
+  timeout?: number;
 }
 
 export interface RunWebScraperParams {
@@ -59,6 +60,7 @@ export interface RunWebScraperParams {
   team_id: string;
   bull_job_id: string;
   priority?: number;
+  timeout?: number;
   is_scrape?: boolean;
   is_crawl?: boolean;
   urlInvisibleInCurrentCrawl?: boolean;

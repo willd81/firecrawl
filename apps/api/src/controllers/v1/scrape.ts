@@ -1,3 +1,4 @@
+import { defaultTimeout } from "../../lib/default-values";
 import { Response } from "express";
 import { logger } from "../../lib/logger";
 import {
@@ -30,10 +31,13 @@ export async function scrapeController(
   });
 
   req.body = scrapeRequestSchema.parse(req.body);
+  const timeout = req.body.timeout ?? defaultTimeout;
+
   let earlyReturn = false;
 
   const origin = req.body.origin;
-  const timeout = req.body.timeout;
+
+  
 
   const startTime = new Date().getTime();
   const jobPriority = await getJobPriority({

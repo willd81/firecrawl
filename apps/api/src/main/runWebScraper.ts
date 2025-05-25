@@ -17,6 +17,7 @@ import {
 import { Engine } from "../scraper/scrapeURL/engines";
 import { indexPage } from "../lib/extract/index/pinecone";
 import { CostTracking } from "../lib/extract/extraction-service";
+import { defaultTimeout } from "../lib/default-values";
 configDotenv();
 
 export async function startWebScraperPipeline({
@@ -54,6 +55,7 @@ export async function startWebScraperPipeline({
     is_scrape: job.data.is_scrape ?? false,
     is_crawl: !!(job.data.crawl_id && job.data.crawlerOptions !== null),
     urlInvisibleInCurrentCrawl: job.data.crawlerOptions?.urlInvisibleInCurrentCrawl ?? false,
+    timeout: job.data.timeout, // ✅ Pass timeout from job data
     costTracking,
   });
 }
@@ -71,6 +73,7 @@ export async function runWebScraper({
   is_scrape = false,
   is_crawl = false,
   urlInvisibleInCurrentCrawl = false,
+  timeout, // ✅ Accept timeout parameter
   costTracking,
 }: RunWebScraperParams): Promise<ScrapeUrlResponse> {
   const logger = _logger.child({
@@ -79,6 +82,12 @@ export async function runWebScraper({
     scrapeId: bull_job_id,
     jobId: bull_job_id,
   });
+  
+  // ✅ Use timeout from parameters or default to 180 seconds
+  const timeoutToUse = timeout ?? defaultTimeout;
+  
+  logger.debug(`Using timeout: ${timeoutToUse}ms`, { timeout: timeoutToUse });
+  
   const tries = is_crawl ? 3 : 1;
 
   let response: ScrapeUrlResponse | undefined = undefined;
@@ -100,12 +109,16 @@ export async function runWebScraper({
     error = undefined;
 
     try {
-      response = await scrapeURL(bull_job_id, url, scrapeOptions, {
+      response = await scrapeURL(bull_job_id, url, {
+        ...scrapeOptions,
+        timeout: timeoutToUse // ✅ Pass timeout to scrapeURL
+      }, {
         priority,
         ...internalOptions,
         urlInvisibleInCurrentCrawl,
         teamId: internalOptions?.teamId ?? team_id,
       }, costTracking);
+      
       if (!response.success) {
         if (response.error instanceof Error) {
           throw response.error;
